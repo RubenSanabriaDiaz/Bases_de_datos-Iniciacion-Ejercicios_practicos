@@ -1,1 +1,0 @@
-# Bases_de_datos-Iniciacion-Ejercicios_practicos
