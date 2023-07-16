@@ -1,0 +1,89 @@
+/*PRACTICA 2 FUNDAMENTOS DE BASES DE DATOS*/
+
+/*Ruben Sanabria Diaz*/
+/*rsd00008@red.ujaen.es*/
+/*rsd00008*/
+/*26527380P*/
+
+
+
+/*1 Muestra las sesiones realizadas el 10 de octubre de 2021 */
+SELECT * FROM sesiones
+WHERE fecha = '10/10/2021';
+
+
+/*2 Muestra los programas ordenados tipo de programa en orden ascendente y por nombre en orden 
+descendente */
+SELECT tipo_pro,nombre,cod_pro "COD_P" FROM programas
+ORDER BY tipo_pro ASC, nombre DESC;
+
+
+/*3 Muestra las distintas fechas del año 2020 (ordenadas ascendentemente) en las que se han realizado 
+sesiones.*/
+SELECT DISTINCT fecha "FECHAS AÃƒâ€˜O 2020" FROM sesiones
+WHERE fecha LIKE '%/20'
+ORDER BY fecha ASC;
+
+
+/*4 Muestra todas las fechas de las sesiones y la duración de las mismas para aquellas sesiones con una 
+duración entre 150 y 200 minutos, La información debe aparecer tal y como aparece abajo, ordenada 
+por la fecha en orden descendente, duración ascendente y con cuatro dígitos para el año*/
+SELECT TO_CHAR(fecha,'dd-mon-yyyy') "FECHAS SESION", duracion "TIEMPO" FROM sesiones
+WHERE duracion BETWEEN 150 AND 200
+ORDER BY fecha DESC, duracion ASC;
+
+
+/*5 Muestra la capacidad del HD y su capacidad incrementada en un 30 % de aquellos ordenadores cuya 
+capacidad conocemos.*/
+SELECT ip,marca,modelo,hd, TO_CHAR(hd + (hd*0.3), '000.00') "HD + 30%" FROM ordenadores
+WHERE hd IS NOT NULL;
+
+
+/*6 ¿Qué alumnos se tienen algún apellido GIL y han nacido en 2001? */
+SELECT apellidos||', '||nombre "APELLIDOS Y NOMBRE", f_nacimiento FROM alumnos
+WHERE apellidos LIKE '%GIL%' 
+      AND f_nacimiento LIKE '%01';
+
+
+
+/*7 ¿De qué ordenadores no conocemos su capacidad de almacenamiento en HD?*/
+SELECT * FROM ordenadores
+WHERE hd IS NULL;
+
+
+/*8 Obtener un listado de las sesiones donde figure el nombre del estudiante y el nombre del programa 
+utilizado. Solo deseo las sesiones de 200 o más minutos. Ordenado por duración y nombre de 
+progama */
+SELECT a.dni, a.apellidos, a.nombre, o.ip "ORDENADORES", s.duracion, p.nombre "NOMBRE"
+FROM alumnos a, ordenadores o, programas p, sesiones s
+WHERE s.duracion>=200
+      AND o.ip = s.ip 
+      AND a.dni = s.dni
+      AND p.cod_pro = s.cod_pro
+ORDER BY s.duracion ASC, p.nombre ASC;
+
+
+/*9 Haz la misma consulta anterior, pero añadiendo el laboratorio en el que se ha realizado la sesión*/
+SELECT a.dni, a.apellidos, a.nombre, o.ip "DIREC. IP", s.duracion, p.nombre "NOMBRE", o.lab "LABORATORIO"
+FROM alumnos a, ordenadores o, programas p, sesiones s
+WHERE s.duracion>=200
+      AND o.ip = s.ip 
+      AND a.dni = s.dni
+      AND p.cod_pro = s.cod_pro
+ORDER BY s.duracion ASC, p.nombre ASC;
+
+
+/*10 Inventa una consulta y realiza el SELECT. La consulta debe cumplir lo siguiente: 
+ Debe tener columnas de al menos 3 de las 4 tablas 
+ Debe tener al menos un alias columna 
+ Debe tener al menos una condición además de las condiciones de join 
+ Debe tener al menos un criterio de ordenación 
+ Debe utilizar alguna función de las vistas en clase: TO_CHAR, TO_NUMBER.... 
+*/
+SELECT a.nombre, a.apellidos, a.dni, o.modelo "MODELO PC", o.marca "MARCA PC", TO_CHAR(o.velocidad + o.velocidad*0.25,'0.00') "VELOCIDAD + 25%", s.duracion, p.nombre "NOMBRE PROG"
+FROM sesiones s,alumnos a,ordenadores o, programas p
+WHERE   s.dni = a.dni 
+    AND s.ip = o.ip 
+    AND s.cod_pro = p.cod_pro
+    AND o.marca = 'DELL'
+ORDER BY s.duracion DESC;

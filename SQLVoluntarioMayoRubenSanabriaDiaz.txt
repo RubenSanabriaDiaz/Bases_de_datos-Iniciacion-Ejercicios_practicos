@@ -1,0 +1,113 @@
+
+CREATE TABLE runner(
+  dni VARCHAR(9) CONSTRAINT pk_runner PRIMARY KEY,
+  nombre VARCHAR(20),
+  f_nac DATE,
+  club VARCHAR(20)
+);
+
+CREATE TABLE localidad(
+  cod_loc VARCHAR(5) CONSTRAINT pk_localidad PRIMARY KEY,
+  localidad VARCHAR(10),
+  prov VARCHAR(10)
+);
+
+CREATE TABLE carrera(
+  cod VARCHAR(20) CONSTRAINT pk_carrera PRIMARY KEY,
+  nombre VARCHAR(20),
+  fecha DATE,
+  distancia NUMBER,
+  tipo VARCHAR(20),
+  cod_loc VARCHAR(20),
+  prov VARCHAR(20),
+  precio NUMBER
+);
+
+
+/*1. Crear tabla Inscripcion*/
+CREATE TABLE inscripcion(
+  dni VARCHAR(9)  CONSTRAINT fk_dni_inscripcion REFERENCES runner,
+  cod VARCHAR(10) CONSTRAINT fk_cod_inscripciones REFERENCES carrera,
+  dorsal  NUMBER(4),
+  f_insc  DATE    CONSTRAINT nn_f_insc_inscripcion NOT NULL,
+  hora  NUMBER(2) CONSTRAINT ck_hora_inscripcion CHECK(hora>=0 AND hora<=23),
+  minu  NUMBER(2) CONSTRAINT ck_minu_inscripcion CHECK(minu>=0 AND minu<=59),
+  seg   NUMBER(2) CONSTRAINT ck_seg_inscripcion  CHECK(seg>=0 AND seg<=59)
+);
+
+ALTER TABLE inscripcion ADD (CONSTRAINT pk_inscripciones PRIMARY KEY (dni,cod));
+
+
+/*2. modificar tabla CARRERA para añadir restriccion clave foranea que referencia a tabla LOCALIDAD*/
+ALTER TABLE carrera ADD (CONSTRAINT fk_cod_carrera REFERENCES localidad);
+
+
+/*3. Borrar inscripciones del club correcaminos*/
+DELETE FROM inscripcion ins
+WHERE ins.dni IN (SELECT cor.dni cor.club
+                  FROM runner cor
+                  WHERE cor.club = 'Correcaminos'
+                    AND cor.dni = ins.dni); /*esto ultimo no se si hace falta*/
+
+
+/*4. Mostrar datos de las carreras en las que han corrido corredores de menores de 18 años o mayores de 65*/
+SELECT c.cod,c.nombre,c.fecha,c.distancia,c.tipo,c.cod_loc,c.precio
+FROM carrera c, runner r
+WHERE c.dni = r.dni
+GROUP BY c.cod,c.nombre,c.fecha,c.distancia,c.tipo,c.cod_loc,c.precio
+HAVING (2022 - r.f_nac) >= 18 OR (2022 - r.f_nac) <= 65;
+
+
+
+/*5. Consultar cuántas carreras ha realizado cada provincia mostrando únicamente las provincias que han organizado 
+más de 20 carreras*/
+SELECT COUNT(car.cod) loc.provincia
+FROM carrera car, localidad loc
+WHERE car.cod_loc = loc.cod_loc
+  AND COUNT(car.cod) > 20;
+
+
+
+/*6. Mostrar todos los datos del corredor más joven*/
+SELECT cor.*
+FROM runner cor
+WHERE cor.f_nacimiento = (SELECT MIN(f_nacimiento)
+                          FROM runner)
+
+/*7. Mostrar cuánto dinero se ha recaudado en cada localidad de la provincia de Jaén (Nota: Hay que tener en cuenta a 
+todos los corredores inscritos en las carreras)*/
+SELECT SUM(ca.precio) lo.localidad
+FROM carrera ca, localidad lo
+WHERE lo.cod_loc = ca.cod_loc
+  AND lo.provincia = 'Jaen';
+
+
+/*8. Mostrar todos los datos del corredor (o corredores) con mejor tiempo (en segundos) en una carrera de maratón 
+(distancia=42195)*/
+SELECT cor.*
+FROM runner cor, carrera ca, inscripcion ins
+WHERE ca.distancia = '42195'
+  AND ins.dni = cor.dni
+HAVING (ins.hora*3600 + ins.minu*60 + ins.seg) = (SELECT MAX((ins2.hora*3600 + ins2.minu*60 + ins2.seg))
+                                                  FROM inscripcion ins2, runner cor2
+                                                  WHERE ins2.dni = cor2.dni);
+
+/*9. Mostrar los datos de corredores que han corrido carreras en todas las provincias*/
+SELECT cor.*
+FROM runner cor, carrera car, inscripcion ins, localidad loc
+WHERE ins.dni = cor.dni
+  AND ins.cod = car.cod
+  AND car.cod_loc = loc.cod_loc
+  AND COUNT(loc.cod_loc) = (SELECT COUNT(loc2.cod_loc)
+                            FROM localidad loc2);
+
+/*10.  Obtener las parejas de clubes que han participado en carreras de más de 20 kilómetros*/
+SELECT cor1.club, cor2.club
+FROM runner cor1, runner cor2, inscripcion ins1, inscripcion ins2
+WHERE (SELECT COUNT(DISTINCT car.cod)
+       FROM carrera car
+       WHERE ins1.cod = car.cod
+         AND ins1.dni = cor1.dni) = (SELECT COUNT(DISTINCT car.cod)
+                                     FROM carrera car
+                                     WHERE ins2.cod = car.cod
+                                       AND ins2.dni = cor2.dni);

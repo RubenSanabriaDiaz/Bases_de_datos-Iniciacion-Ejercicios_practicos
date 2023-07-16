@@ -1,0 +1,43 @@
+EJERCICIO VOLUNTARIO MAYO FBD. NORMALIZACION 
+Normalizar hasta 3FN la siguiente tabla:
+Congreso (#conferencia, #autor, #ponente, titulo, tema, #tema, nombre, empresa, nif_empresa, dni, dir, tlf,fax, tp_max, email, fecha, hora_inicio, sala, n_palabras)
+Considerando que: 
+•    Una conferencia puede tener varios autores pero sólo uno de ellos será el ponente o conferenciante.
+•    Un autor puede tener varias conferencias en el mismo congreso. 
+•    Un ponente puede exponer varias conferencias en el mismo congreso
+•    El NIF es único por empresa
+
+1FN
+Congreso (#conferencia, #autor, #ponente, titulo, tema, #tema, nombre, empresa, nif_empresa, dni, dir, tlf, fax, tp_max, email, fecha, hora_inicio, sala, n_palabras)
+Clave única: #conferencia, #autor, #ponente, tema, #tema, nombre, empresa, nif_empresa, dni, dir, tlf, fax, tp_max, email, fecha, hora_inicio, sala, n_palabras
+
+Congreso (#conferencia, #autor, #ponente, tema, #tema, nombre, empresa, nif_empresa, dni, dir, tlf, fax, tp_max, email, fecha, hora_inicio, sala, n_palabras)
+#autor -> nombre, empresa, nif_empresa, dni, dir, tlf, fax, email
+#conferencia -> tema, #tema, fecha, hora_inicio, sala, n_palabras, tp_max
+#ponente -> #autor
+
+Clave correcta (única y mínima): #conferencia, #autor
+
+
+
+2FN 
+clave: #conferencia, #autor
+Congreso (#conferencia, #autor, #ponente, titulo, tema, #tema, nombre, empresa, nif_empresa, dni, dir, tlf, fax, tp_max, email, fecha, hora_inicio, sala, n_palabras)
+#ponente -> #autor (-> nombre, empresa, nif_empresa, dni, dir, tlf, fax, email)
+#conferencia -> tema, #tema, fecha, hora_inicio, sala, n_palabras, tp_max
+
+
+Congreso (#conferencia, #autor, #ponente, titulo, tema, #tema, nombre, empresa, nif_empresa, dni, dir, tlf, fax, tp_max, email, fecha, hora_inicio, sala, n_palabras)
+Conferencia (#conferencia, tema, #tema, fecha, hora_inicio, sala, n_palabras, tp_max)
+Ponente (#ponente, #autor)
+
+
+
+3FN
+Congreso (#conferencia, #autor, #ponente)
+Conferencia (#conferencia, #tema, fecha, hora_inicio, sala, n_palabras, tp_max)
+Autor (#autor, nombre, empresa, nif_empresa, dni, dir, tlf, fax, email)
+Tema (#tema, tema)
+
+
+Rubén Sanabria Díaz, rsd00008

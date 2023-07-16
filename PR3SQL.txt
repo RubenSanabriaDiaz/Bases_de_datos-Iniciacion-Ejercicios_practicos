@@ -1,0 +1,237 @@
+/*PRACTICA 3*/
+/*RUBEN SANABRIA DIAZ, rsd00008, 26527380P*/
+
+/*1 ¿Cuántas sesiones se han realizado en total?*/
+SELECT COUNT(*) "Nº TOTAL DE SESIONES" 
+FROM sesiones;
+
+
+/*2 ¿Cuántas sesiones se han realizado en el año 2020?*/
+SELECT COUNT(*) "Nº TOTAL DE SESIONES EN 2020" 
+FROM sesiones 
+WHERE fecha LIKE '%/20';
+
+
+/*3  ¿Cuántas sesiones se han realizado en cada ordenador?*/
+SELECT o.ip "ORDENADOR", COUNT(*) "Nº DE SESIONES" 
+FROM ordenadores o, sesiones s
+WHERE s.ip = o.ip
+GROUP BY o.ip
+ORDER BY COUNT(*);
+
+
+/*4 Quiero realizar la consulta anterior, pero solo deseo visualizar aquellos 
+ordenadores en los que se han realizado 6 o más sesiones*/
+SELECT o.ip "ORDENADOR", COUNT(*) "Nº DE SESIONES" 
+FROM ordenadores o, sesiones s
+WHERE s.ip = o.ip 
+HAVING COUNT(*) >= 6
+GROUP BY o.ip
+ORDER BY COUNT(*);
+
+
+/*5 ¿Cuántas sesiones se han realizado en cada ordenador en el año 2020?*/
+SELECT o.ip "ORDENADOR", o.marca, o.modelo, COUNT(o.ip) "Nº DE SESIONES EN 2020"
+FROM sesiones s,ordenadores o
+WHERE s.ip = o.ip 
+  AND s.fecha LIKE '%20'
+GROUP BY o.ip, o.marca, o.modelo
+ORDER BY COUNT(o.ip) ASC;
+
+
+/*6 Quiero realizar la consulta anterior, pero solo deseo visualizar aquellos 
+ordenadores en los que se han realizado más de una consulta*/
+SELECT o.ip "ORDENADOR",o.marca,o.modelo,COUNT(o.ip) "Nº DE SESIONES EN 2020"
+FROM sesiones s,ordenadores o
+WHERE s.ip = o.ip 
+  AND s.fecha LIKE '%20'
+GROUP BY o.ip,o.marca,o.modelo
+HAVING COUNT(o.ip) > 1
+ORDER BY COUNT(o.ip) ASC;
+
+/*7  Muestra la capacidad de almacenamiento total y medio de 
+los ordenadores agrupados por marca*/
+SELECT marca, SUM(hd) "HD TOTAL",TO_CHAR(AVG(hd),'999.99') "HD MEDIO"
+FROM ordenadores
+GROUP BY marca
+ORDER BY marca ASC;
+
+
+/*8 Calcula la duración total de todas las sesiones realizadas por 
+el alumno con dni ‘11111111A’en ordenadores ‘ACER’ en las que se han
+utilizado aplicaciones de BD */
+SELECT s.ip, a.apellidos, a.nombre, o.marca, o.modelo, SUM(s.duracion) "DURACION TOTAL"
+FROM sesiones s, alumnos a, programas p, ordenadores o
+WHERE a.dni = '11111111A' 
+  AND o.marca = 'ACER' 
+  AND p.tipo_pro = 'BD' 
+  AND a.dni = s.dni 
+  AND s.ip = o.ip 
+  AND p.cod_pro = s.cod_pro
+GROUP BY s.ip,a.apellidos,a.nombre,o.marca,o.modelo;
+
+
+/*9 Calcula la mínima velocidad de todos los ordenadores*/
+SELECT MIN(velocidad) "VELOCIDAD MINIMA" 
+FROM ordenadores;
+
+
+/*10  Calcula el número total de sesiones realizadas por cada alumno 
+agrupado por marca de ordenador */
+SELECT al.apellidos, al.nombre, o.marca, COUNT(s.dni) "NUM SESIONES"
+FROM sesiones s, alumnos al, ordenadores o
+WHERE al.dni = s.dni 
+  AND s.ip = o.ip
+GROUP BY al.apellidos, al.nombre, o.marca
+ORDER BY 1 ASC, o.marca;
+
+
+/*11 Muestra la duración de la sesión más larga */
+SELECT MAX(duracion) "DURACION MAXIMA" 
+FROM sesiones;
+
+
+/*12 Muestra los tiempos totales que ha trabajado cada alumno en todas las 
+sesiones que ha realizado. 
+Ordénalo por duración */
+SELECT SUM(s.duracion) "DURACION ACUMULADA POR ALUMNO" 
+FROM alumnos a, sesiones s
+WHERE s.dni = a.dni
+GROUP BY a.dni
+ORDER BY SUM(s.duracion);
+
+
+/*13 De todas las duraciones acumuladas de la consulta anterior, muestra la 
+mayor de ellas*/
+SELECT MAX(SUM(s.duracion)) "DURACION ACUMULADA MAXIMA" 
+FROM alumnos a, sesiones s
+WHERE s.dni = a.dni
+GROUP BY a.dni;
+
+
+/*14 Muestra el total de tiempo que ha trabajado cada alumno ordenado por duración*/
+SELECT a.dni, (a.apellidos || ', ' || a.nombre) "NOMBRE COMPLETO", SUM(s.duracion) "DURACION ACUMULADA POR ALUMNO" 
+FROM alumnos a, sesiones s
+WHERE s.dni = a.dni
+GROUP BY a.dni, a.nombre, a.apellidos
+ORDER BY SUM(s.duracion);
+
+
+/*15  Ídem consulta anterior, pero deseo visualizar sólo aquellos alumnos 
+que han trabajado más de 800 
+minutos */
+SELECT a.dni, (a.apellidos || ', ' || a.nombre) "NOMBRE COMPLETO", SUM(s.duracion) "DURACION ACUMULADA POR ALUMNO" 
+FROM alumnos a, sesiones s
+WHERE s.dni = a.dni 
+GROUP BY a.dni, a.nombre, a.apellidos
+HAVING SUM(s.duracion) >= 800
+ORDER BY SUM(s.duracion);
+
+
+/*16 Visualiza al alumno que más ha trabajado, es decir con una duración 
+acumulada mayor. Dicho de otro modo, de la consulta 14 solo deseo conocer 
+al alumno que más ha trabajado*/
+SELECT al.dni , (al.nombre || ' ' || al.apellidos) "NOMBRE COMPLETO", SUM(s.duracion) "DURACION ACUMULADA"
+FROM sesiones s, alumnos al
+WHERE s.dni = al.dni
+GROUP BY al.dni, al.apellidos, al.nombre
+HAVING SUM(s.duracion) = (SELECT MAX(SUM(ses.duracion))
+                          FROM sesiones ses, alumnos alu
+                          WHERE ses.dni=alu.dni
+                          GROUP BY ses.dni, alu.nombre, alu.apellidos);
+                          
+
+/*17 ¿Cuáles son los alumnos que han trabajado en alguno de los ordenadores 
+en los que ha trabajado el alumno con DNI ‘11111111A’*/
+SELECT DISTINCT a.* 
+FROM alumnos a, ordenadores o
+WHERE o.ip IN (SELECT o.ip 
+               FROM ordenadores o, alumnos a 
+               WHERE a.dni = '11111111A') 
+      AND a.dni != '11111111A'
+ORDER BY 1;
+
+
+/*18 ¿Qué devuelven las siguientes consultas?*/
+/*Devuelve el dni, nombre y apellidos de los alumnos los cuales la suma de la 
+duracion de sus sesiones es mayor a 800.*/
+
+
+/*19  Muestra las parejas de alumnos han realizado el mismo número de sesiones*/
+SELECT a1.dni,a2.dni
+FROM alumnos a1,alumnos a2
+WHERE (SELECT COUNT (fecha) 
+       FROM sesiones s 
+       WHERE a1.dni=s.dni) = (SELECT COUNT (fecha) 
+                              FROM sesiones s 
+                              WHERE a2.dni=s.dni) 
+  AND a1.dni < a2.dni; 
+
+
+/*20 Muestra las parejas de alumnos que han trabajado con el mismo nº de 
+programas distintos*/
+SELECT a1.apellidos ||', '||a1.nombre "APELLIDOS Y NOMBRE 1", a2.apellidos ||', '|| a2.nombre "APELLIDOS Y NOMBRE 2"
+FROM alumnos a1,alumnos a2
+WHERE (SELECT  COUNT(DISTINCT cod_pro) 
+       FROM sesiones s 
+       WHERE a1.dni=s.dni) = (SELECT  COUNT(DISTINCT cod_pro) 
+                              FROM sesiones s 
+                              WHERE a2.dni=s.dni)
+       AND a1.dni < a2.dni;
+
+
+/*21. Muestra los alumnos que sólo han trabajado con programas de ofimática*/
+SELECT DISTINCT al.dni, al.nombre, al.apellidos, al.email, al.f_nacimiento
+FROM alumnos al, sesiones s, programas p
+WHERE al.dni = s.dni 
+  AND s.cod_pro = p.cod_pro 
+  AND p.tipo_pro = 'OFIMATICA'
+  AND s.dni NOT IN (SELECT s2.dni
+                    FROM sesiones s2, programas p2
+                    WHERE s2.cod_pro = p2.cod_pro 
+                      AND p2.tipo_pro != 'OFIMATICA');
+                    
+/*22. Muestra a los alumnos que han trabajado con todos los programas de ofimática*/
+SELECT DISTINCT al.dni, al.nombre, al.apellidos, al.email, al.f_nacimiento
+FROM alumnos al, sesiones s, programas p
+WHERE al.dni = s.dni 
+  AND s.cod_pro = p.cod_pro 
+  AND p.nombre = 'WORD OFFICE'
+  AND s.dni IN (SELECT s2.dni
+                FROM sesiones s2, programas p2
+                WHERE s2.cod_pro = p2.cod_pro 
+                  AND p2.nombre = 'EXCEL OFFICE');
+                    
+/*23. Muestra los alumnos que han trabajado en todos los laboratorios*/
+SELECT a.dni,a.nombre,a.apellidos,a.email,a.f_nacimiento
+FROM alumnos a
+WHERE NOT EXISTS(
+                  (SELECT COUNT(DISTINCT o.lab)
+                   FROM ordenadores o) 
+                  
+                   MINUS 
+                  
+                  (SELECT COUNT(DISTINCT o.lab) 
+                   FROM ordenadores o, sesiones s 
+                   WHERE o.ip=s.ip 
+                     AND a.dni=s.dni)
+                );
+
+/*24. Muestra los alumnos que han trabajado sólo en los laboratorios 
+en los que hay ordenadores de marca ‘DELL’*/
+
+SELECT DISTINCT a1.*
+FROM alumnos a1
+WHERE NOT EXISTS(
+                (SELECT DISTINCT ord.lab
+                 FROM sesiones s, ordenadores ord
+                 WHERE s.dni = a1.dni
+                   AND s.ip = ord.ip)
+                      
+                 MINUS
+                
+                (SELECT DISTINCT o.lab
+                 FROM ordenadores o
+                 WHERE o.marca = 'DELL')
+);
+     

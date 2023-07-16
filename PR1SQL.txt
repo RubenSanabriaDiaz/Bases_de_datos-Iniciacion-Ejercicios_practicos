@@ -1,0 +1,371 @@
+/*PRACTICA 1*/
+/*RUBEN SANABRIA DIAZ, rsd00008, 26527380P*/
+
+CREATE TABLE alumnos (
+  dni           VARCHAR(9)      CONSTRAINT pk_dni_alumnos           PRIMARY KEY                                          ,
+  nombre        VARCHAR(10)     CONSTRAINT nn_nombre_alumnos        NOT NULL                                             ,
+  apellidos      VARCHAR(20)     CONSTRAINT nn_apellidos_alumnos      NOT NULL                                             ,
+  email         VARCHAR(25)     CONSTRAINT nn_email_alumnos         NOT NULL                                             ,
+  f_nacimiento  DATE
+);
+
+CREATE TABLE ordenadores (
+  ip           VARCHAR(15)      CONSTRAINT pk_dni_ordenadores       PRIMARY KEY                                          ,
+  marca        VARCHAR(5)       CONSTRAINT nn_nombre_ordenadores    NOT NULL     
+                                CONSTRAINT ck_marca_ordenadores     CHECK(marca='DELL' OR marca='ACER' OR marca='ASUS')  ,
+                           
+  modelo       VARCHAR(15)      CONSTRAINT nn_modelo_ordenadores  NOT NULL                                             ,
+  velocidad    NUMBER(3,1)                                                                                               ,
+  hd           NUMBER(3)                                                                                                 ,
+  lab          NUMBER(1)        CONSTRAINT ck_lab_ordenadores       CHECK(lab>=1 AND lab<=5)
+);
+
+CREATE TABLE programas (
+  cod_pro      VARCHAR(5)       CONSTRAINT pk_cod_pro_programas     PRIMARY KEY                                          ,                            
+  nombre       VARCHAR(15)      CONSTRAINT nn_nombre_programas      NOT NULl                                             ,
+  tipo_pro     VARCHAR(10)      CONSTRAINT nn_tipo_pro_programas    NOT NULL     
+);
+
+CREATE TABLE sesiones (
+  dni          VARCHAR(9)       CONSTRAINT nn_dni_sesiones          NOT NULL
+                                CONSTRAINT fk_dni_sesiones          REFERENCES alumnos                                   ,
+                            
+  ip           VARCHAR(15)      CONSTRAINT nn_ip_sesiones           NOT NULL                                             ,
+  duracion     NUMBER(3,0)      CONSTRAINT nn_duracion_sesiones     NOT NULL     
+                                CONSTRAINT ck_duracion_sesiones     CHECK(duracion>0 AND duracion<=300)                  ,
+                                
+  cod_pro      VARCHAR(5)       CONSTRAINT fk_cod_pro_sesiones      REFERENCES programas                   
+);
+
+SELECT table_name FROM user_tables;
+
+ALTER TABLE sesiones ADD    (fecha DATE);
+
+ALTER TABLE sesiones MODIFY (fecha DATE
+                             CONSTRAINT nn_fecha_sesiones NOT NULL);
+
+ALTER TABLE sesiones MODIFY (ip CONSTRAINT fk_ip_sesiones REFERENCES ordenadores);
+
+ALTER TABLE sesiones ADD    (CONSTRAINT pk_sesiones PRIMARY KEY (dni,ip,fecha));
+
+ALTER TABLE alumnos  MODIFY (email VARCHAR(25)
+                             CONSTRAINT ck_email_alumnos CHECK (email LIKE '%@%'));
+
+INSERT INTO alumnos VALUES('11111111A','JUAN',  'PEREZ GOMEZ','perez258@hotmail.com',    '10-04-2000');
+INSERT INTO alumnos VALUES('22222222B','CARLOS','GIL Y GIL',  'gilcuadrado@gmail.com',   '12-04-2001');
+INSERT INTO alumnos VALUES('33333333C','EVA',   'SOLAS MOA',  'evasolasmoa@gmail.com',   '19-12-2002');
+INSERT INTO alumnos VALUES('44444444D','MARIA', 'CUETARA GIL','cmg589@hotmail.com',      '7-03-2001');
+INSERT INTO alumnos VALUES('55555555E','PIO',   'LOPEZ GOMEZ','cavernicola127@gmail.com','10-07-2000');
+INSERT INTO alumnos VALUES('66666666F','CARMEN','GIL MARTIN', 'cgm125@hotmail.com',      '10-10-2000');
+
+INSERT INTO ordenadores VALUES('150.155.178.91', 'DELL', 'INSPIRIN 15',2.8,100,1);
+INSERT INTO ordenadores VALUES('150.214.125.112','ASUS','ZENBOOK',     2.9,88,3);
+INSERT INTO ordenadores VALUES('150.214.135.23', 'ACER', 'ENDURO',     2.4,NULL,1);
+INSERT INTO ordenadores VALUES('150.218.115.170','DELL','XPS 17',      2.9,145,2);
+INSERT INTO ordenadores VALUES('150.228.147.225','DELL','XPS 13',      3.0,120,4);
+INSERT INTO ordenadores VALUES('150.228.221.247','ACER','PORSCHE',     2.0,NULL,5);
+
+INSERT INTO programas VALUES('ORA',  'ORACLE',      'BD');
+INSERT INTO programas VALUES('EC',   'ECLIPSE',     'IDE');
+INSERT INTO programas VALUES('NETB', 'NETBEANS',    'IDE');
+INSERT INTO programas VALUES('WO365','WORD OFFICE', 'OFIMATICA');
+INSERT INTO programas VALUES('MON',  'MONGO DB',    'BD');
+INSERT INTO programas VALUES('EX365','EXCEL OFFICE','OFIMATICA');
+INSERT INTO programas VALUES('PDOX', 'PARADOX',     'BD');
+
+INSERT INTO sesiones VALUES('11111111A', '150.155.178.91',  152,	'ORA',  '18-08-2020');
+INSERT INTO sesiones VALUES('11111111A', '150.214.125.112', 247,	'EC',   '12-10-2021');
+INSERT INTO sesiones VALUES('11111111A', '150.228.147.225', 125,	'NETB', '25-12-2022');
+INSERT INTO sesiones VALUES('11111111A', '150.228.221.247', 214,	'ORA',  '17-02-2021');
+INSERT INTO sesiones VALUES('22222222B', '150.214.125.112',  65,	'NETB', '15-11-2020');
+INSERT INTO sesiones VALUES('22222222B', '150.214.135.23',  127,	'ORA',  '02-04-2020');
+INSERT INTO sesiones VALUES('22222222B', '150.218.115.170', 129,	'MON',  '17-08-2021');
+INSERT INTO sesiones VALUES('22222222B', '150.228.147.225', 143,	'ORA',  '25-12-2022');
+INSERT INTO sesiones VALUES('22222222B', '150.214.135.23',  214,	'WO365','17-02-2021');
+INSERT INTO sesiones VALUES('33333333C', '150.218.115.170', 289,	'EC',   '19-08-2020');
+INSERT INTO sesiones VALUES('33333333C', '150.228.147.225', 254,	'MON',  '12-12-2021');
+INSERT INTO sesiones VALUES('33333333C', '150.214.135.23',  154,	'NETB', '5-12-2022');
+INSERT INTO sesiones VALUES('33333333C', '150.218.115.170',  90,	'ORA',  '17-12-2021');
+INSERT INTO sesiones VALUES('33333333C', '150.228.147.225', 127,	'PDOX', '05-11-2020');
+INSERT INTO sesiones VALUES('44444444D', '150.214.125.112', 152,	'EX365','02-04-2020');
+INSERT INTO sesiones VALUES('44444444D', '150.214.135.23',  247,	'WO365','18-08-2020');
+INSERT INTO sesiones VALUES('44444444D', '150.155.178.91',  125,	'WO365','25-12-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.214.125.112', 100,	'NETB', '17-02-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.214.135.23',  257,	'ORA',  '10-04-2011');
+INSERT INTO sesiones VALUES('55555555E', '150.218.115.170', 147,	'EC',   '12-04-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.228.147.225', 125,	'MON',  '19-12-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.228.221.247', 258,	'PDOX', '07-03-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.155.178.91',   32,	'ORA',  '10-07-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.155.178.91',   90,	'MON',  '10-10-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.214.135.23',   45,	'MON',  '09-03-2020');
+INSERT INTO sesiones VALUES('55555555E', '150.155.178.91',   45,	'ORA',  '08-02-2020');
+INSERT INTO sesiones VALUES('55555555E', '150.214.125.112', 179,	'ORA',  '22-01-2021');
+INSERT INTO sesiones VALUES('66666666F', '150.214.135.23',  152,	'EX365','05-2-2022');
+INSERT INTO sesiones VALUES('66666666F', '150.218.115.170', 247,	'PDOX', '1-02-2021');
+INSERT INTO sesiones VALUES('66666666F', '150.228.147.225', 125,	'NETB', '15-1-2020');
+INSERT INTO sesiones VALUES('66666666F', '150.228.221.247', 232,	'WO365','12-04-2020');
+
+UPDATE sesiones SET duracion = duracion + 50
+  WHERE fecha = '25-12-2022';
+
+DELETE FROM alumnos
+  WHERE dni = '11111111A';
+/*violamos integridad referencial de las tablas. porque sesiones.dni referencia a la tabla alumnos*/
+
+UPDATE alumnos SET f_nacimiento='12-12-2001'
+  WHERE dni = '22222222B';
+
+INSERT INTO sesiones VALUES('44444444D', '150.155.178.91', 189,	'ORA',  '25-12-2021'); /*violamos la restriccion de única clave al intentar insertar una tupla con una clave existente*/
+INSERT INTO sesiones VALUES('11111111A', '150.155.178.91', 125,	'MONGO','25-01-2021'); /*violamos la integridad referencial de las tablas al intentar insertar una tupla sin existir la clave en la tabla a la que referenciamos*/
+INSERT INTO sesiones VALUES('44444444D', '150.155.178.91', 325,	NULL,   '25-01-2021'); /*violamos la restriccion de check al intentar meter una duracion fuera del rango que nosotros pusimos. rango de restriccion: [0,300] e intentamos meter una tupla de 325*/
+
+SELECT * FROM alumnos ORDER BY 1;
+SELECT * FROM ordenadores ORDER BY 1;
+SELECT * FROM programas ORDER BY 1;
+SELECT * FROM sesiones ORDER BY 1,2,5;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DROP TABLE programas CASCADE CONSTRAINTS;
+DROP TABLE alumnos CASCADE CONSTRAINTS;
+DROP TABLE sesiones CASCADE CONSTRAINTS;
+DROP TABLE ordenadores CASCADE CONSTRAINTS;
+
+
+CREATE TABLE alumnos (
+  dni           VARCHAR(9)  CONSTRAINT pk_dni_alumnos       PRIMARY KEY,
+  nombre        VARCHAR(10) CONSTRAINT nn_nombre_alumnos    NOT NULL,
+  apellido      VARCHAR(20) CONSTRAINT nn_apellido_alumnos  NOT NULL,
+  email         VARCHAR(25) CONSTRAINT nn_email_alumnos     NOT NULL,
+  f_nacimiento  DATE
+);
+
+CREATE TABLE ordenadores (
+  ip           VARCHAR(15) CONSTRAINT pk_dni_ordenadores       PRIMARY KEY                                               ,
+  marca        VARCHAR(5)  CONSTRAINT nn_nombre_ordenadores    NOT NULL     
+                           CONSTRAINT ck_marca_ordenadores     CHECK(marca='DELL' OR marca='ACER' OR marca='ASUS')       ,
+                           
+  modelo       VARCHAR(15) CONSTRAINT nn_apellido_ordenadores  NOT NULL                                                  ,
+  velocidad    NUMBER(3,1)                                                                                               ,
+  hd           NUMBER(3)                                                                                                 ,
+  lab          NUMBER(1)   CONSTRAINT ck_lab_ordenadores       CHECK(lab>=1 AND lab<=5)
+);
+
+CREATE TABLE programas (
+  cod_pro       VARCHAR(5)  CONSTRAINT pk_cod_pro_programas       PRIMARY KEY        ,                            
+  nombre        VARCHAR(15) CONSTRAINT nn_nombre_programas        NOT NULL           ,
+  tipo_pro      VARCHAR(10) CONSTRAINT nn_tipo_pro_programas      NOT NULL     
+);
+
+CREATE TABLE sesiones (
+  dni           VARCHAR(9)      CONSTRAINT nn_dni_sesiones         NOT NULL
+                                CONSTRAINT fk_dni_sesiones         REFERENCES alumnos                     ,
+                            
+  ip            VARCHAR(15)     CONSTRAINT nn_ip_sesiones          NOT NULL                               ,
+  duracion      NUMBER(3,0)     CONSTRAINT nn_duracion_sesiones    NOT NULL     
+                                CONSTRAINT ck_duracion_sesiones    CHECK(duracion>0 AND duracion<=300)    ,
+                                
+  cod_pro       VARCHAR(5)      CONSTRAINT fk_cod_pro_sesiones     REFERENCES programas                   
+);
+
+SELECT table_name FROM user_tables;
+
+ALTER TABLE sesiones ADD (fecha DATE);
+
+ALTER TABLE sesiones MODIFY (fecha DATE
+                             CONSTRAINT nn_fecha_sesiones NOT NULL);
+
+ALTER TABLE sesiones MODIFY (ip CONSTRAINT fk_ip_sesiones REFERENCES ordenadores);
+
+ALTER TABLE sesiones ADD (CONSTRAINT pk_sesiones PRIMARY KEY (dni,ip,fecha));
+
+ALTER TABLE alumnos MODIFY (email VARCHAR(25)
+                            CONSTRAINT ck_email_alumnos CHECK (email LIKE '%@%'));
+
+INSERT INTO alumnos VALUES('11111111A','JUAN','PEREZ GOMEZ','perez258@hotmail.com','10-04-2000');
+INSERT INTO alumnos VALUES('22222222B','CARLOS','GIL Y GIL','gilcuadrado@gmail.com','12-04-2001');
+INSERT INTO alumnos VALUES('33333333C','EVA','SOLAS MOA','evasolasmoa@gmail.com','19-12-2002');
+INSERT INTO alumnos VALUES('44444444D','MARIA','CUETARA GIL','cmg589@hotmail.com','7-03-2001');
+INSERT INTO alumnos VALUES('55555555E','PIO','LOPEZ GOMEZ','cavernicola127@gmail.com','10-07-2000');
+INSERT INTO alumnos VALUES('66666666F','CARMEN','GIL MARTIN','cgm125@hotmail.com','10-10-2000');
+
+INSERT INTO ordenadores VALUES('150.155.178.91','DELL','INSPIRIN 15',2.8,100,1);
+INSERT INTO ordenadores VALUES('150.214.125.112','ASUS','ZENBOOK',2.9,88,3);
+INSERT INTO ordenadores VALUES('150.214.135.23','ACER','ENDURO',2.4,NULL,1);
+INSERT INTO ordenadores VALUES('150.218.115.170','DELL','XPS 17',2.9,145,2);
+INSERT INTO ordenadores VALUES('150.228.147.225','DELL','XPS 13',3.0,120,4);
+INSERT INTO ordenadores VALUES('150.228.221.247','ACER','PORSCHE',2.0,NULL,5);
+
+INSERT INTO programas VALUES('ORA','ORACLE','BD');
+INSERT INTO programas VALUES('EC','ECLIPSE','IDE');
+INSERT INTO programas VALUES('NETB','NETBEANS','IDE');
+INSERT INTO programas VALUES('WO365','WORD OFFICE','OFIMATICA');
+INSERT INTO programas VALUES('MON','MONGO DB','BD');
+INSERT INTO programas VALUES('EX365','EXCEL OFFICE','OFIMATICA');
+INSERT INTO programas VALUES('PDOX','PARADOX','BD');
+
+INSERT INTO sesiones VALUES('11111111A', '150.155.178.91',  152,	'ORA',  '18-08-2020');
+INSERT INTO sesiones VALUES('11111111A', '150.214.125.112', 247,	'EC',   '12-10-2021');
+INSERT INTO sesiones VALUES('11111111A', '150.228.147.225', 125,	'NETB', '25-12-2022');
+INSERT INTO sesiones VALUES('11111111A', '150.228.221.247', 214,	'ORA',  '17-02-2021');
+
+INSERT INTO sesiones VALUES('22222222B', '150.214.125.112',  65,	'NETB', '15-11-2020');
+INSERT INTO sesiones VALUES('22222222B', '150.214.135.23',  127,	'ORA',  '02-04-2020');
+INSERT INTO sesiones VALUES('22222222B', '150.218.115.170', 129,	'MON',  '17-08-2021');
+INSERT INTO sesiones VALUES('22222222B', '150.228.147.225', 143,	'ORA',  '25-12-2022');
+INSERT INTO sesiones VALUES('22222222B', '150.214.135.23',  214,	'WO365','17-02-2021');
+
+INSERT INTO sesiones VALUES('33333333C', '150.218.115.170', 289,	'EC',   '19-08-2020');
+INSERT INTO sesiones VALUES('33333333C', '150.228.147.225', 254,	'MON',  '12-12-2021');
+INSERT INTO sesiones VALUES('33333333C', '150.214.135.23',  154,	'NETB', '5-12-2022');
+INSERT INTO sesiones VALUES('33333333C', '150.218.115.170',  90,	'ORA',  '17-12-2021');
+INSERT INTO sesiones VALUES('33333333C', '150.228.147.225', 127,	'PDOX', '05-11-2020');
+
+INSERT INTO sesiones VALUES('44444444D', '150.214.125.112', 152,	'EX365','02-04-2020');
+INSERT INTO sesiones VALUES('44444444D', '150.214.135.23',  247,	'WO365','18-08-2020');
+INSERT INTO sesiones VALUES('44444444D', '150.155.178.91',  125,	'WO365','25-12-2021');
+
+INSERT INTO sesiones VALUES('55555555E', '150.214.125.112', 100,	'NETB', '17-02-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.214.135.23',  257,	'ORA',  '10-04-2011');
+INSERT INTO sesiones VALUES('55555555E', '150.218.115.170', 147,	'EC',   '12-04-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.228.147.225', 125,	'MON',  '19-12-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.228.221.247', 258,	'PDOX', '07-03-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.155.178.91',   32,	'ORA',  '10-07-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.155.178.91',   90,	'MON',  '10-10-2021');
+INSERT INTO sesiones VALUES('55555555E', '150.214.135.23',   45,	'MON',  '09-03-2020');
+INSERT INTO sesiones VALUES('55555555E', '150.155.178.91',   45,	'ORA',  '08-02-2020');
+INSERT INTO sesiones VALUES('55555555E', '150.214.125.112', 179,	'ORA',  '22-01-2021');
+
+INSERT INTO sesiones VALUES('66666666F', '150.214.135.23',  152,	'EX365','05-2-2022');
+INSERT INTO sesiones VALUES('66666666F', '150.218.115.170', 247,	'PDOX', '1-02-2021');
+INSERT INTO sesiones VALUES('66666666F', '150.228.147.225', 125,	'NETB', '15-1-2020');
+INSERT INTO sesiones VALUES('66666666F', '150.228.221.247', 232,	'WO365','12-04-2020');
+
+UPDATE sesiones SET duracion = duracion + 50
+  WHERE fecha = '25-12-2022';
+
+DELETE FROM alumnos
+  WHERE dni = '11111111A';
+/*violamos integridad referencial de las tablas. porque sesiones.dni referencia a la tabla alumnos*/
+
+UPDATE alumnos SET f_nacimiento='12-12-2001'
+  WHERE dni = '22222222B';
+
+INSERT INTO sesiones VALUES('44444444D', '150.155.178.91', 189,	'ORA','25-12-2021'); /*violamos la restriccion de única clave al intentar insertar una tupla con una clave existente*/
+INSERT INTO sesiones VALUES('11111111A', '150.155.178.91', 125,	'MONGO','25-01-2021'); /*violamos la integridad referencial de las tablas al intentar insertar una tupla sin existir la clave en la tabla a la que referenciamos*/
+INSERT INTO sesiones VALUES('44444444D', '150.155.178.91', 325,	NULL,'25-01-2021'); /*violamos la restriccion de check al intentar meter una duracion fuera del rango que nosotros pusimos. rango de restriccion: [0,300] e intentamos meter una tupla de 325*/
+
+SELECT * FROM alumnos ORDER BY 1;
+SELECT * FROM ordenadores ORDER BY 1;
+SELECT * FROM programas ORDER BY 1;
+SELECT * FROM sesiones ORDER BY 1,2,5;
+
+

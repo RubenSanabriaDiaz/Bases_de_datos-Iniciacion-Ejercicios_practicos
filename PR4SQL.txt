@@ -1,0 +1,588 @@
+/*PRACTICA 4 FUNDAMENTOS DE BASES DE DATOS*/
+
+/*Rubén Sanabria Díaz*/
+/*rsd00008@red.ujaen.es*/
+/*rsd00008*/
+/*26527380P*/
+
+
+/* 1.- Insertar las mismas sesiones que las del día 17-FEB-2021 pero con la 
+fecha 14-ABR-2021 con una duración de 50 minutos y el mismo valor en cod pro*/
+
+1a opcion
+INSERT INTO sesiones
+SELECT dni,ip,50,cod_pro,'14-ABR-2021'
+FROM sesiones
+WHERE fecha = '17-FEB-2021';
+
+
+2a opcion
+INSERT INTO sesiones (SELECT dni,ip,50,codpro, '14-ABR-2021'
+		      FROM sesion
+	 	      WHERE fecha = '17-FEB-2021');
+
+/*2. Actualiza con un único comando UPDATE e independientemente de los datos 
+que se tengan almacenados la duración de las sesiones realizadas en el 
+laboratorio 2, de tal manera que se establezca como duración, la media de 
+las duraciones de las sesiones que han utilizado el programa con el que se 
+ha trabajado en dicha sesión*/
+UPDATE sesiones se
+SET se.duracion = (SELECT AVG(s.duracion)
+                   FROM sesiones s
+                   WHERE s.cod_pro = se.cod_pro)
+                   
+WHERE se.ip IN (SELECT ord.ip
+                FROM ordenadores ord
+                WHERE ord.lab = 2);
+
+/*3. Actualiza con un único comando UPDATE e independientemente de los datos 
+que se tengan almacenados, los ordenadores que no conocemos su capacidad 
+de almacenamiento, de forma que se le asigne como nueva capacidad, el número 
+de sesiones que se han realizado con dicho ordenador multiplicado por 10*/
+UPDATE ordenadores o
+SET hd = (SELECT COUNT(s.ip)*10
+          FROM sesiones s
+          WHERE o.ip = s.ip)
+WHERE hd IS NULL;
+
+/*4.  Disminuye en un 10% la velocidad de los ordenadores que han sido 
+utilizados exactamente por 3 personas distintas.*/
+UPDATE ordenadores o
+SET velocidad = (velocidad - velocidad*0.1)
+WHERE 3 = (SELECT COUNT(DISTINCT s.dni)
+           FROM sesiones s
+           WHERE o.ip = s.ip);
+          
+          
+/*5. Teniendo en cuenta que en la cláusula WHERE del comando DELETE se pueden 
+utilizar también subconsultas y variables de tupla, borra las sesiones cuya 
+fecha es posterior al 1 de enero de 2020 de los alumnos que no 
+han utilizado ordenadores DELL*/
+DELETE FROM sesiones s
+WHERE fecha > '01/01/2020'
+AND s.ip IN (SELECT ses.ip
+             FROM sesiones ses, ordenadores o
+             WHERE o.ip = ses.ip
+               AND o.marca != 'DELL');
+
+
+/*6. las tablas deben contener las siguientes tuplas: */
+SELECT * FROM alumnos ORDER BY 1; 
+SELECT * FROM ordenadores ORDER BY 1; 
+SELECT * FROM programas ORDER BY 1; 
+SELECT * FROM sesiones ORDER BY 1,2,5; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE empresa(
+              nif                  VARCHAR (9)           CONSTRAINT pk_empresa                      PRIMARY KEY,
+              nombre               VARCHAR(30)           CONSTRAINT nn_nombre_empresa               NOT NULL);
+              
+CREATE TABLE juego(
+              id_juego             VARCHAR(7)            CONSTRAINT pk_juego                        PRIMARY KEY,
+              nombre               VARCHAR(20)           CONSTRAINT nn_nombre_juego                 NOT NULL,
+              f_publicacion        DATE,
+              n_ventas             NUMBER                CONSTRAINT nn_n_ventas_juego               NOT NULL,
+              precio               NUMBER(4,2)           CONSTRAINT ck_precio_jugo                  CHECK  (precio > 20 AND precio < 90),
+              descripcion          VARCHAR(200)          CONSTRAINT nn_descripcion_juego            NOT NULL,
+              tipo                 VARCHAR(15)           CONSTRAINT nn_tipo_juego                   NOT NULL,
+              nif_1                VARCHAR(9)            CONSTRAINT fk_nif_1_juego                  REFERENCES empresa,
+              nif_2                VARCHAR(9)            CONSTRAINT fk_nif_2_juego                  REFERENCES empresa,
+              nif_3                VARCHAR(9)            CONSTRAINT fk_nif_3_juego                  REFERENCES empresa);
+
+CREATE TABLE actualizacion(
+              version              VARCHAR(7),
+              f_actualizacion      DATE,
+              descripcion          VARCHAR(200)          CONSTRAINT nn_descripcion_actualizacion    NOT NULL,
+              id_J                 VARCHAR(7)            CONSTRAINT fk_id_juego_actualizacion       REFERENCES juego,
+              CONSTRAINT pk_version_id_J_actualizacion PRIMARY KEY(version, id_J));
+            
+CREATE TABLE cp(
+              cp            NUMBER(5,0),
+              localidad     VARCHAR(20)       CONSTRAINT      nn_localidad_cp     NOT NULL,
+              CONSTRAINT pk_cp PRIMARY KEY(cp));            
+              
+CREATE TABLE empleado(
+              dni                  VARCHAR (9)           CONSTRAINT pk_empleado                     PRIMARY KEY,
+              nombre               VARCHAR (10)          CONSTRAINT nn_nombre_empleado              NOT NULL,
+              apellidos            VARCHAR (20)          CONSTRAINT nn_apellidos_empleado           NOT NULL,
+              f_nacimiento         DATE,
+              domicilio            VARCHAR(30)           CONSTRAINT nn_domicilio_empleado           NOT NULL,
+              cp                   NUMBER(5,0)           CONSTRAINT fk_cp_empleado                  REFERENCES cp,
+              nif                  VARCHAR(9)            CONSTRAINT fk_nif_empleado                 REFERENCES empresa);
+
+CREATE TABLE agencia(
+              id_agencia           VARCHAR (9)           CONSTRAINT pk_agencia                      PRIMARY KEY,
+              nombre               VARCHAR(30)           CONSTRAINT nn_nombre_agencia               NOT NULL);
+
+CREATE TABLE producto(
+             cod_pro               VARCHAR(7)            CONSTRAINT nn_cod_pro_producto             NOT NULL,
+             nombre                VARCHAR(15)           CONSTRAINT nn_nombre_producto              NOT NULL,
+             descripcion           VARCHAR(200)          CONSTRAINT nn_descripcion_producto         NOT NULL,
+             precio                number(5,2)           CONSTRAINT ck_precio_producto              CHECK (precio > 10 AND precio < 400),
+             nif                   VARCHAR(9)            CONSTRAINT fk_nif_producto                 REFERENCES empresa,
+             CONSTRAINT pk_producto PRIMARY KEY(cod_pro, nif));
+
+CREATE TABLE anuncio(
+             id_anuncio           VARCHAR(7)            CONSTRAINT nn_version_anuncio               NOT NULL,
+             duracion             NUMBER(3,0)           CONSTRAINT ck_duracion_anuncio              CHECK (duracion > 0 AND duracion < 180)
+                                                        CONSTRAINT nn_duracion_anuncio              NOT NULL,      
+             precio               NUMBER(6,2)          CONSTRAINT nn_precio_anuncio                 NOT NULL,
+             id_agencia           VARCHAR(9)            CONSTRAINT fk_id_agencia_anuncio            REFERENCES agencia,
+             nif                  VARCHAR(9),         
+             cod_pro              VARCHAR(7),
+             id_juego             VARCHAR(7)            CONSTRAINT fk_id_juego_anuncio              REFERENCES juego,
+             CONSTRAINT fk_nif_cod_pro_anuncio FOREIGN KEY(nif, cod_pro) REFERENCES producto,
+             CONSTRAINT pk_anuncio PRIMARY KEY(id_anuncio, id_agencia, nif, cod_pro, id_juego));
+
+CREATE TABLE ag_em(
+             id_agencia           VARCHAR(9)            CONSTRAINT fk_id_agencia_ag_em           REFERENCES agencia,
+             nif                  VARCHAR(9)            CONSTRAINT fk_nif_ag_em                  REFERENCES empresa,
+             CONSTRAINT pk_ag_em PRIMARY KEY(id_agencia, nif));
+
+CREATE TABLE emp_emp(
+              nif_1       VARCHAR(9),
+              nif_2       VARCHAR(9),
+              CONSTRAINT pk_emp_emp PRIMARY KEY(nif_1, nif_2),
+              CONSTRAINT fk_nif_1_emp_emp FOREIGN KEY(nif_1) REFERENCES empresa,
+              CONSTRAINT fk_nif_2_emp_emp FOREIGN KEY(nif_2) REFERENCES empresa);
+              
+CREATE TABLE director(
+              dni                  VARCHAR(9),
+              CONSTRAINT pk_director PRIMARY KEY(dni),
+              CONSTRAINT pk_dni_director FOREIGN KEY(dni) references empleado);
+
+CREATE TABLE programador(
+              dni_1         VARCHAR(9),
+              dni_2         VARCHAR(9),
+              CONSTRAINT pk_programador PRIMARY KEY(dni_1),
+              CONSTRAINT fk_dni_1_programador FOREIGN KEY(dni_1) REFERENCES empleado,
+              CONSTRAINT fk_dni_2_programador FOREIGN KEY(dni_2) REFERENCES director);
+              
+CREATE TABLE diseñador(
+              dni_1         VARCHAR(9),
+              dni_2         VARCHAR(9),
+              CONSTRAINT pk_diseñador PRIMARY KEY(dni_1),
+              CONSTRAINT fk_dni_1_diseñador FOREIGN KEY(dni_1) REFERENCES empleado,
+              CONSTRAINT fk_dni_2_diseñador FOREIGN KEY(dni_2) REFERENCES director);
+              
+CREATE TABLE personaje(
+              id_J          VARCHAR(7),
+              nombre        VARCHAR(20),
+              rol           VARCHAR(10)         CONSTRAINT        nn_rol_personaje            NOT NULL,
+              descripcion   VARCHAR(30)         CONSTRAINT        nn_descripcion_personaje    NOT NULL,
+              CONSTRAINT pk_personaje PRIMARY KEY(id_J, nombre),
+              CONSTRAINT fk_id_J_personaje FOREIGN KEY(id_J) REFERENCES juego);
+            
+CREATE TABLE bug(
+              id_B          VARCHAR(7),
+              descrip   VARCHAR(200)         CONSTRAINT        nn_desc_bug         NOT NULL,
+              version       VARCHAR(7),
+              id_J1         VARCHAR(7),
+              id_J2         VARCHAR(7),
+              CONSTRAINT pk_bug PRIMARY KEY(id_B),
+              CONSTRAINT fk_version_id_J1_bug FOREIGN KEY(version, id_J1) REFERENCES actualizacion,
+              CONSTRAINT fk_id_J2_bug FOREIGN KEY(id_J2) REFERENCES juego);
+              
+CREATE TABLE ju_prog(
+              id_J          VARCHAR(7),
+              dni           VARCHAR(9),
+              CONSTRAINT  pk_ju_prog  PRIMARY KEY(id_J, dni),
+              CONSTRAINT fk_id_J_ju_prog  FOREIGN KEY(id_J) REFERENCES juego,
+              CONSTRAINT fk_dni_ju_prog  FOREIGN KEY(dni) REFERENCES programador);
+              
+CREATE TABLE ju_dis(
+              id_J          VARCHAR(7),
+              dni           VARCHAR(9),
+              CONSTRAINT pk_ju_dis PRIMARY KEY(id_J, dni),
+              CONSTRAINT fk_id_J_ju_dis FOREIGN KEY(id_J) REFERENCES juego,
+              CONSTRAINT fk_dni_ju_dis FOREIGN KEY(dni) REFERENCES programador);
+              
+INSERT INTO empresa VALUES('12345678A', 'TENCENT');
+INSERT INTO empresa VALUES('12345678B', 'SONY INTERACTIVE ENTERTAINMENT');
+INSERT INTO empresa VALUES('12345678C', 'XBOX GAME STUDIOS');
+INSERT INTO empresa VALUES('12345678D', 'ACTIVISION BLIZZARD');
+INSERT INTO empresa VALUES('12345678E', 'ELECTRONIC ARTS');
+INSERT INTO empresa VALUES('12345678F', 'UBISOFT');
+INSERT INTO empresa VALUES('12345678G', 'SQUARE ENIX');
+INSERT INTO empresa VALUES('12345678H', 'NINTENDO');
+INSERT INTO empresa VALUES('12345678I', 'EPIC GAMES');
+INSERT INTO empresa VALUES('12345678J', 'SEGA');
+
+INSERT INTO agencia VALUES('2F56FYE25', 'BICLAMEDIA');
+INSERT INTO agencia VALUES('91KE83HO9', 'NORDIA');
+INSERT INTO agencia VALUES('1MA93JEPX', 'WOLA');
+INSERT INTO agencia VALUES('93LSY31SV', 'HENDRIX');
+INSERT INTO agencia VALUES('PJ36N3M15', 'EVASION');
+INSERT INTO agencia VALUES('9N4KY128T', 'GREY');
+INSERT INTO agencia VALUES('83MF4J30B', 'CONTRAPUNTO');
+INSERT INTO agencia VALUES('118MN6KS9', 'LEO BURNETT');
+INSERT INTO agencia VALUES('OF83M5ND9', 'PROXIMMA');
+INSERT INTO agencia VALUES('94KDMW72C', 'PARNASO COMUNICACION');
+INSERT INTO agencia VALUES('801AG8DX3', 'MACCAN WORD CUP');
+INSERT INTO agencia VALUES('7MHW910MC', 'WAKA');
+INSERT INTO agencia VALUES('81MYQC481', 'SHACKLETON');
+INSERT INTO agencia VALUES('8BZUE42OA', 'DOBLE YOU');
+INSERT INTO agencia VALUES('5AJDUQ53N', 'LOLA MULLENLOWE');
+INSERT INTO agencia VALUES('YWMX25DJ9', 'SINDN');
+INSERT INTO agencia VALUES('UWM81N3SS', 'Y AND R');
+INSERT INTO agencia VALUES('KI87MMA23', 'OLGIVY');
+INSERT INTO agencia VALUES('KW9ANV6ZX', 'VVCP');
+INSERT INTO agencia VALUES('UQJ84OUS3', 'ELESPACIO');
+
+INSERT INTO cp VALUES('23560', 'HUELMA');
+INSERT INTO cp VALUES('23561', 'MOTRIL');
+INSERT INTO cp VALUES('23562', 'PORCUNA');
+INSERT INTO cp VALUES('23563', 'BAILEN');
+INSERT INTO cp VALUES('23564', 'ANDUJAR');
+INSERT INTO cp VALUES('23565', 'GUADIX');
+INSERT INTO cp VALUES('23566', 'GUADALAJARA');
+INSERT INTO cp VALUES('23567', 'LINARES');
+INSERT INTO cp VALUES('23568', 'JAEN');
+INSERT INTO cp VALUES('23569', 'MOJACAR');
+INSERT INTO cp VALUES('23570', 'MADRID');
+INSERT INTO cp VALUES('23571', 'BARCELONA');
+INSERT INTO cp VALUES('23572', 'ALMERIA');
+INSERT INTO cp VALUES('23573', 'HUESCA');
+INSERT INTO cp VALUES('23574', 'SEVILLA');
+INSERT INTO cp VALUES('23575', 'OVIEDO');
+INSERT INTO cp VALUES('23576', 'CUENCA');
+INSERT INTO cp VALUES('23577', 'VALLADOLID');
+INSERT INTO cp VALUES('23578', 'ZARAGOZA');
+INSERT INTO cp VALUES('23579', 'MURCIA');
+
+
+INSERT INTO emp_emp VALUES('12345678A', '12345678B');
+INSERT INTO emp_emp VALUES('12345678A', '12345678C');
+INSERT INTO emp_emp VALUES('12345678D', '12345678G');
+INSERT INTO emp_emp VALUES('12345678B', '12345678C');
+INSERT INTO emp_emp VALUES('12345678I', '12345678J');
+INSERT INTO emp_emp VALUES('12345678E', '12345678F');
+
+INSERT INTO programador VALUES('91839443Y', '53919007S');
+INSERT INTO programador VALUES('14166219J', '53919007S');
+INSERT INTO programador VALUES('73539783C', '53919007S');
+INSERT INTO programador VALUES('20491469X', '53919007S');
+INSERT INTO programador VALUES('01018041S', '70635710L');
+INSERT INTO programador VALUES('39364869R', '70635710L');
+INSERT INTO programador VALUES('46948725K', '70635710L');
+INSERT INTO programador VALUES('29935246X', '70635710L');
+INSERT INTO programador VALUES('48234266T', '05413516Y');
+INSERT INTO programador VALUES('53641343F', '05413516Y');
+INSERT INTO programador VALUES('32040454M', '05413516Y');
+INSERT INTO programador VALUES('22776836M', '05413516Y');
+INSERT INTO programador VALUES('57648200B', '37136467T');
+INSERT INTO programador VALUES('19347163T', '37136467T');
+INSERT INTO programador VALUES('50273055T', '37136467T');
+INSERT INTO programador VALUES('63052419N', '37136467T');
+INSERT INTO programador VALUES('22547428E', '69570041D');
+INSERT INTO programador VALUES('73325437B', '69570041D');
+INSERT INTO programador VALUES('23627232E', '69570041D');
+INSERT INTO programador VALUES('99294064M', '69570041D');
+INSERT INTO programador VALUES('50039893N', '69570041D');
+INSERT INTO programador VALUES('89713218Q', '69570041D');
+INSERT INTO programador VALUES('92855897K', '73362492J');
+INSERT INTO programador VALUES('92855897K', '73362492J');
+INSERT INTO programador VALUES('15666987P', '73362492J');
+INSERT INTO programador VALUES('39417246F', '73362492J');
+INSERT INTO programador VALUES('18418176Y', '25564512N');
+INSERT INTO programador VALUES('05045404D', '25564512N');
+INSERT INTO programador VALUES('24076180X', '25564512N');
+INSERT INTO programador VALUES('24978745D', '25564512N');
+INSERT INTO programador VALUES('55248842J', '25564512N');
+INSERT INTO programador VALUES('70832176L', '25564512N');
+INSERT INTO programador VALUES('55576166R', '34188735V');
+INSERT INTO programador VALUES('13718492G', '34188735V');
+INSERT INTO programador VALUES('84460336N', '09764048L');
+INSERT INTO programador VALUES('10159462V', '09764048L');
+INSERT INTO programador VALUES('74967637B', '09764048L');
+INSERT INTO programador VALUES('48199217A', '09764048L');
+INSERT INTO programador VALUES('26074569K', '28186762D');
+INSERT INTO programador VALUES('84449403G', '28186762D');
+INSERT INTO programador VALUES('96346422C', '28186762D');
+INSERT INTO programador VALUES('06669649V', '28186762D');
+
+INSERT INTO diseñador VALUES('59002503M', '05413516Y'); A
+INSERT INTO diseñador VALUES('73921923S', '05413516Y'); A
+INSERT INTO diseñador VALUES('48545235D', '05413516Y'); A
+INSERT INTO diseñador VALUES('94335991L', '09764048L'); B
+INSERT INTO diseñador VALUES('63592882K', '09764048L'); B
+INSERT INTO diseñador VALUES('88167421A', '09764048L'); B
+INSERT INTO diseñador VALUES('76308242S', '09764048L'); B
+INSERT INTO diseñador VALUES('07995290F', '09764048L'); B
+INSERT INTO diseñador VALUES('29347344B', '28186762D'); C
+INSERT INTO diseñador VALUES('77706073K', '28186762D'); C
+INSERT INTO diseñador VALUES('44078117C', '28186762D'); C
+INSERT INTO diseñador VALUES('60263930C', '69570041D'); D
+INSERT INTO diseñador VALUES('97342272Q', '69570041D'); D
+INSERT INTO diseñador VALUES('90037275A', '69570041D'); D
+INSERT INTO diseñador VALUES('97205152E', '69570041D'); D
+INSERT INTO diseñador VALUES('36365968R', '69570041D'); D
+INSERT INTO diseñador VALUES('34766319W', '69570041D'); D
+INSERT INTO diseñador VALUES('14425371R', '37136467T'); E
+INSERT INTO diseñador VALUES('15259737L', '37136467T'); E
+INSERT INTO diseñador VALUES('25189717W', '73362492J'); F
+INSERT INTO diseñador VALUES('91237430H', '73362492J'); F
+INSERT INTO diseñador VALUES('67944311B', '73362492J'); F
+INSERT INTO diseñador VALUES('06858240P', '25564512N'); G
+INSERT INTO diseñador VALUES('27892101R', '25564512N'); G
+INSERT INTO diseñador VALUES('80902448V', '25564512N'); G
+INSERT INTO diseñador VALUES('91504031A', '25564512N'); G
+INSERT INTO diseñador VALUES('27110913P', '70635710L'); H
+INSERT INTO diseñador VALUES('63360077E', '70635710L'); H
+INSERT INTO diseñador VALUES('01644697J', '53919007S'); I
+INSERT INTO diseñador VALUES('86163999L', '53919007S'); I
+INSERT INTO diseñador VALUES('67920997L', '53919007S'); I
+INSERT INTO diseñador VALUES('99931137R', '34188735V'); J
+INSERT INTO diseñador VALUES('79427098W', '34188735V'); J
+
+
+ 
+INSERT INTO director VALUES('53919007S'); I
+INSERT INTO director VALUES('70635710L'); H 
+INSERT INTO director VALUES('05413516Y'); A
+INSERT INTO director VALUES('37136467T'); E
+INSERT INTO director VALUES('69570041D'); D
+INSERT INTO director VALUES('73362492J'); F
+INSERT INTO director VALUES('25564512N'); G
+INSERT INTO director VALUES('34188735V'); J
+INSERT INTO director VALUES('09764048L'); B
+INSERT INTO director VALUES('28186762D'); C
+
+
+INSERT INTO personaje VALUES('p1'  , 'Axel'     , 'delantero'   , 'delantero estrella del equipo raimon');
+INSERT INTO personaje VALUES('p2'  , 'Mark'     , 'portero'     , 'portero legendario del equipo raimon');
+INSERT INTO personaje VALUES('p3'  , 'Tanjiro'  , 'matademonios', 'guerrero matademonios que vela por la seguridad de las personas en la noche. Respiracion: fuego-agua');
+INSERT INTO personaje VALUES('p4'  , 'Deku'     , 'heroe'       , 'heroe que defiende al pueblo de los malos. Poder: superfuerza');
+INSERT INTO personaje VALUES('p5'  , 'Uzui'     , 'pilar'       , 'uno de los pilares del cuerpo de matademonio. Respiracion: sonido');
+INSERT INTO personaje VALUES('p6'  , 'RenGoku'  , 'pilar'       , 'uno de los pilares mas fuerte que plantan cara a los demonios mas fuertes. Respiracion: de las llamas');
+INSERT INTO personaje VALUES('p7'  , 'Vegeta'   , 'saiyan'      , 'guerrero saiyan que defiende el planeta tierra');
+INSERT INTO personaje VALUES('p8'  , 'Goku'     , 'saiyan'      , 'guerrero saiyan legendario que controla el ki y que defiende el planeta tierra');
+INSERT INTO personaje VALUES('p9'  , 'Gohan'    , 'humano'      , 'guerrero humano-saiyan que defiende el planeta tierra. Hijo de goku');
+INSERT INTO personaje VALUES('p10' , 'Krillin'  , 'humano'      , 'guerrero humano con tecnicas artes marciales que defiende el planeta tierra');
+INSERT INTO personaje VALUES('p11' , 'Bakugo'   , 'heroe'       , 'heroe con mucha ira y poca paciencia. Poder: explosion');
+INSERT INTO personaje VALUES('p12' , 'Todoroki' , 'heroe'       , 'heroe muy calmado y frio, ademas de inteligente y estrategico. Poder: frio-calor');
+INSERT INTO personaje VALUES('p13' , 'Inosuke'  , 'matademonios', 'guerrero matademonios criado en el monte. Respiracion: bestia');
+INSERT INTO personaje VALUES('p14' , 'Muzan'    , 'demonio'     , 'jefe de los demonios, capaz de convertir un humano en demonio');
+INSERT INTO personaje VALUES('p15' , 'Nezuko'   , 'demonio'     , 'demonio que acompaña a tanjiro todo el rato. Hermana de tanjiro');
+INSERT INTO personaje VALUES('p16' , 'Zenitsu'  , 'matademonios', 'guerrero matademonios muy sensible y super poderoso cuando duerme. Respiracion: trueno');
+INSERT INTO personaje VALUES('p17' , 'Trunks'   , 'humano'      , 'guerrero humano-saiyan que viaja al futuro. Hijo de vegeta');
+
+
+
+INSERT INTO bug VALUES('b1'  , 'fallo al subir de nivel'                , '2.12.23', 'EHGASF2');
+INSERT INTO bug VALUES('b2'  , 'fallo a la hora de cargar personajes'   , '2.12.23', 'EHGASF2');
+INSERT INTO bug VALUES('b3'  , 'fallo al tirar un ataque'               , '1.17.04', 'PASPCA6');
+INSERT INTO bug VALUES('b4'  , 'fallo al huir de la batalla'            , '1.17.04', 'PASPCA6');
+INSERT INTO bug VALUES('b5'  , 'fallo al escoger personaje'             , '8.16.24', 'MTU6PLE');
+INSERT INTO bug VALUES('b6'  , 'fallo al recoger energía'               , '8.16.24', 'MTU6PLE');
+INSERT INTO bug VALUES('b7'  , 'fallo al cargar mapa'                   , '1.03.10', 'MACSFAF');
+INSERT INTO bug VALUES('b8'  , 'fallo al recoger coleccionables'        , '1.03.10', 'MACSFAF');
+INSERT INTO bug VALUES('b9'  , 'fallo al golpear a un enemigo'          , '2.04.12', 'GASPR78');
+INSERT INTO bug VALUES('b10' , 'fallo al cargar fondo del escenario'    , '2.04.12', 'GASPR78');
+INSERT INTO bug VALUES('b11' , 'fallo al saltar'                        , '3.01.03', 'AMSOTC2');
+INSERT INTO bug VALUES('b12' , 'fallo al coger monedas'                 , '3.01.03', 'AMSOTC2');
+INSERT INTO bug VALUES('b13' , 'fallo al bloquear ataque'               , '2.17.02', 'EHGASF2');
+INSERT INTO bug VALUES('b14' , 'fallo al cargar super poder'            , '2.17.02', 'EHGASF2');
+INSERT INTO bug VALUES('b15' , 'fallo al hablar con otros NPCs'         , '2.17.02', 'EHGASF2');
+
+
+
+INSERT INTO ju_prog VALUES('11111111A' , 'EHGASF2');
+INSERT INTO ju_prog VALUES('11111111C' , 'PASPCA6');
+INSERT INTO ju_prog VALUES('11111111E' , 'XHFJDD4');
+INSERT INTO ju_prog VALUES('11111111J' , 'AMSOTC2');
+INSERT INTO ju_prog VALUES('11111111I' , 'XHFJDD4');
+INSERT INTO ju_prog VALUES('11111111G' , 'ESFBTS3');
+INSERT INTO ju_prog VALUES('11111111A' , 'PASPCA6');
+INSERT INTO ju_prog VALUES('11111111I' , 'ESFBTS3');
+INSERT INTO ju_prog VALUES('11111111E' , 'MTU6PLE');
+INSERT INTO ju_prog VALUES('11111111J' , 'MTU6PLE');
+INSERT INTO ju_prog VALUES('11111111A' , 'ESFBTS3');
+INSERT INTO ju_prog VALUES('11111111J' , 'PASPCA6');
+INSERT INTO ju_prog VALUES('11111111I' , 'EHGASF2');
+INSERT INTO ju_prog VALUES('11111111A' , 'MTU6PLE');
+INSERT INTO ju_prog VALUES('11111111B' , 'XHFJDD4');
+INSERT INTO ju_prog VALUES('11111111G' , 'MTU6PLE');
+INSERT INTO ju_prog VALUES('11111111E' , 'PASPCA6');
+INSERT INTO ju_prog VALUES('11111111B' , 'MTU6PLE');
+
+INSERT INTO ju_dis VALUES('22222222A' , 'EHGASF2');
+INSERT INTO ju_dis VALUES('22222222C' , 'PASPCA6');
+INSERT INTO ju_dis VALUES('22222222E' , 'XHFJDD4');
+INSERT INTO ju_dis VALUES('22222222J' , 'AMSOTC2');
+INSERT INTO ju_dis VALUES('22222222I' , 'XHFJDD4');
+INSERT INTO ju_dis VALUES('22222222G' , 'ESFBTS3');
+INSERT INTO ju_dis VALUES('22222222A' , 'PASPCA6');
+INSERT INTO ju_dis VALUES('22222222I' , 'ESFBTS3');
+INSERT INTO ju_dis VALUES('22222222E' , 'MTU6PLE');
+INSERT INTO ju_dis VALUES('22222222J' , 'MTU6PLE');
+INSERT INTO ju_dis VALUES('22222222A' , 'ESFBTS3');
+INSERT INTO ju_dis VALUES('22222222J' , 'PASPCA6');
+INSERT INTO ju_dis VALUES('22222222C' , 'EHGASF2');
+INSERT INTO ju_dis VALUES('22222222B' , 'PASPCA6');
+INSERT INTO ju_dis VALUES('22222222A' , 'MTU6PLE');
+INSERT INTO ju_dis VALUES('22222222I' , 'PASPCA6');
+INSERT INTO ju_dis VALUES('22222222E' , 'PASPCA6');
+INSERT INTO ju_dis VALUES('22222222A' , 'XHFJDD4');
+INSERT INTO ju_dis VALUES('22222222B' , 'EHGASF2');
+INSERT INTO ju_dis VALUES('22222222E' , 'MTU6PLE');
+INSERT INTO ju_dis VALUES('22222222I' , 'EHGASF2');
+INSERT INTO ju_dis VALUES('22222222C' , 'XHFJDD4');
+
+INSERT INTO juego VALUES('EHGASF2', 'Final Fantasy', '22-02-2014',1500000000,50,'Final Fantasy es un juego de rol donde salvarás al mundo del mal','ROL' ,'','12345678O','12345678P');
+INSERT INTO juego VALUES('AMSOTC2', 'Mario Bros', '12-05-2017',35000000,65.50,'Mario Bros es un juego de plataformas donde tendrás que rescatar a la princesa','PLATAFORMAS','12345678H','','');
+INSERT INTO juego VALUES('PASPCA6', 'Pokemon', '27-06-2019',8500000,53,'En Pokemon, deberás capturarlos a todos y ser el mejor','AVENTURAS','12345678H','','');
+INSERT INTO juego VALUES('GASPR78', 'Street Fighter', '15-08-2018',1257000000,75,'Street Fighter es el juego perfecto para combatir con amigos y demostrar quién es el mejor','LUCHA','12345678M','','');
+INSERT INTO juego VALUES('MACSFAF', 'Subnautica', '19-12-2018',25000000,40,'En Subnautica explorarás el océano de un planeta desconocido','AVENTURAS','','12345678K','12345678J');
+INSERT INTO juego VALUES('MTU6PLE', 'League Of Legends', '11-10-2017',45770000,35.75,'En League Of Legends, combatirás junto a más compañeros para derribar las bases enemigas','MOBA','12345678A','','');
+INSERT INTO juego VALUES('ESFBTS3', 'AVENTURAS', '02-08-2021',13500000,25.50,'The Last of Us te introducirá en un mundo post-apocalíptico donde tendrás que sobrevivir','AVENTURAS','12345678B','','');
+INSERT INTO juego VALUES('KJHGF4V', 'Minecraft', '18-07-2022',8300800,56,'Minecraft despegará tu imaginación y tus habilidades para sobrevivir en un mundo donde estás solo','SUPERVIVENCIA','12345678Q','','');
+INSERT INTO juego VALUES('XHFJDD4', 'FIFA', '29-11-2020',19005700,68,'FIFA te brindará una experiencia de fútbol única, con los mejores jugadores de las mejores ligas','DEPORTE','','12345678E','12345678F');
+
+INSERT INTO actualizacion VALUES('2.12.23', '27-05-2014','Se ha añadido un parche para no conseguir ataques infinitos','EHGASF2');
+INSERT INTO actualizacion VALUES('1.17.04', '12-02-2021','Se han reducido las estadísticas de Mamoswine','PASPCA6');
+INSERT INTO actualizacion VALUES('8.16.24', '04-11-2022','Corregidos los errores en la selección de campeón','MTU6PLE');
+INSERT INTO actualizacion VALUES('1.03.10', '21-10-2019','La nueva especie abismal, el Leviatán, se eliminará debido a un bug','MACSFAF');
+INSERT INTO actualizacion VALUES('2.04.12', '10-05-2022','Corregido bug de invencibilidad','GASPR78');
+INSERT INTO actualizacion VALUES('3.01.03', '21-12-2017','Corrección de desaparición de Bowser al final del juego','AMSOTC2');
+INSERT INTO actualizacion VALUES('2.17.02', '13-07-2018','Corregido el bug del nuevo mundo, Midgard','EHGASF2');
+
+INSERT INTO anuncio VALUES('ABCDEF1','100',1200000,'2F56FYE25','12345678P','ZYABR33','');
+INSERT INTO anuncio VALUES('ABCDEF2','60',350000,'118MN6KS9','12345678Q','','ESFBTS3');
+INSERT INTO anuncio VALUES('ABCDEF3','50',200000,'7MHW910MC','12345678A','','EHGASF2');
+INSERT INTO anuncio VALUES('ABCDEF4','120',1000500,'UWM81N3SS','12345678B','YYABB32','');
+INSERT INTO anuncio VALUES('ABCDEF5','30',55000,'UQJ84OUS3','12345678C','','MACSFAF');
+INSERT INTO anuncio VALUES('ABCDEF6','55',30500,'KI87MMA23','12345678G','PYASF22','');
+INSERT INTO anuncio VALUES('ABCDEF7','70',1400800,'118MN6KS9','12345678H','','XHFJDD4');
+INSERT INTO anuncio VALUES('ABCDEF8','110',80000,'KI87MMA23','12345678E','WYAXR47','');
+
+INSERT INTO producto VALUES('ZYABR33','PolySTation','Videoconsola de última generación con 2TB de almacenamiento',300 ,'12345678B');
+INSERT INTO producto VALUES('WYAXR47','Ratón Razer','Ratón óptico wireless con hasta 10000 DPI',40 ,'12345678P');
+INSERT INTO producto VALUES('YYABB32','Ultra Teclado','Teclado mecánico configurable con LEDS',35.75 ,'12345678E');
+INSERT INTO producto VALUES('FFFBF89','Ratón MSI GX33','Ratón gaming confortable con botones',55 ,'12345678F');
+INSERT INTO producto VALUES('ZWRBV73','XDross360','Videoconsola de última generación con 3TB de almacenamiento',330 ,'12345678C');
+INSERT INTO producto VALUES('CYAKL39','Auri ProSound','Auriculares estéreo con calidad de sonido Ultra',38.95 ,'12345678Q');
+INSERT INTO producto VALUES('PYASF22','Mando Corleone','Mando configurable para cualquier plataforma',50 ,'12345678T');
+INSERT INTO producto VALUES('ZZXVR99','Ratón MSI GX44','Ratón de generación siguiente al GX33',63.99 ,'12345678S');
+
+INSERT INTO empleado VALUES('53919007S','MANUEL','RUIZ TORIBIO','21-10-2002','Calle Hola',23564,'12345678I');
+INSERT INTO empleado VALUES('70635710L','MIGUEL','SANDRO COBO','22-11-2000','Avenida Alcalá',23562,'12345678H');
+INSERT INTO empleado VALUES('05413516Y','LUIS','GARRIDO ORTIZ','11-12-1999','Calle Adios',23564,'12345678A');
+INSERT INTO empleado VALUES('48545235D','ESTEBAN','GARROTE AGUILAR','08-12-1971','Calle Cervantes',23574,'12345678A');
+INSERT INTO empleado VALUES('73921923S','CARLOS','BELTRAN ÁVILA','13-05-2001','Calle Aguja',23561,'12345678A');
+INSERT INTO empleado VALUES('48234266T','ANA','RUIZ TORIBIO','10-05-1996','Calle Hola',23571,'12345678A');
+INSERT INTO empleado VALUES('63360077E','LAURA','GÓMEZ SERNA','15-03-2000','Avenida Magdalena',23571,'12345678H');
+INSERT INTO empleado VALUES('53641343F','SERGIO','VILLAR SERRANO','16-11-2001','Calle Silera',23574,'12345678A');
+INSERT INTO empleado VALUES('37136467T','PABLO','MORILLAS PLAZA','19-09-2002','Calle Boteros',23575,'12345678E');
+INSERT INTO empleado VALUES('01018041S','FATIMA','SANZ BAENA','07-03-1994','Calle Hornos',23572,'12345678H');
+INSERT INTO empleado VALUES('69570041D','RUBÉN','SANABRIA DÍAZ','03-02-1982','Avenida Valdivia',23565,'12345678D');
+INSERT INTO empleado VALUES('73362492J','JUAN','MONTILLA GÓMEZ','01-01-2003','Calle Civantos',23564,'12345678F');
+INSERT INTO empleado VALUES('91839443Y','RUBÉN','SERRANO REDONDO','14-11-1989','Calle Serrano',23575,'12345678I');
+INSERT INTO empleado VALUES('25564512N','CARLOS','VERDEJO SEQUERA','15-09-1999','Avenida La Costa',23570,'12345678G');
+INSERT INTO empleado VALUES('18418176Y','SERGIO','ALTOZANO TORIBIO','22-10-2001','Calle Einstein',23570,'12345678G');
+INSERT INTO empleado VALUES('27110913P','SEBASTIÁN','MONTOYA PÉREZ','21-11-2003','Avenida Ronaldo',23570,'12345678H');
+INSERT INTO empleado VALUES('14166219J','BLANCA','PLATERO LÓPEZ','13-12-1992','Avenida La Jalea',23563,'12345678I');
+INSERT INTO empleado VALUES('34188735V','BELÉN','GARCÍA DÍAZ','03-12-1986','Calle Lagunilla',23568,'12345678J');
+INSERT INTO empleado VALUES('09764048L','ANA','SERRANO VILLAR','11-05-2000','Calle Edén',23566,'12345678B');
+INSERT INTO empleado VALUES('22547428E','MANUEL','PERFECTTI MARTIN','10-05-1992','Calle Alcantarilla',23567,'12345678D');
+INSERT INTO empleado VALUES('73325437B','ROBERTO','DOS SANTOS FÉLIX','17-03-2002','Calle Enjendro',23569,'12345678D');
+INSERT INTO empleado VALUES('39364869R','CRISTINA','ARNÉS MOLINA','16-11-2001','Avenida Batallón',23573,'12345678H');
+INSERT INTO empleado VALUES('28186762D','FRANCISCO','MOLERO GUERRA','19-09-2002','Calle Espinola',23578,'12345678C');
+INSERT INTO empleado VALUES('46948725K','ÁLVARO','FUENTES POLO','07-03-1995','Calle Calderón',23576,'12345678H');
+INSERT INTO empleado VALUES('92855897K','ELENA','SANZ LÓPEZ','03-02-1982','Avenida Villar',23576,'12345678F');
+INSERT INTO empleado VALUES('15666987P','JOSÉ','POLO PLATERO','01-01-2001','Calle Morillas',23570,'12345678F');
+INSERT INTO empleado VALUES('10159462V','RUBÉN','SERRANO MENA','14-11-1988','Calle Monitor',23579,'12345678B');
+INSERT INTO empleado VALUES('26074569K','PABLO','QUEVEDO NAVAS','15-09-1997','Avenida Mortadela',23577,'12345678C');
+INSERT INTO empleado VALUES('05045404D','GASPAR','PIQUERAS TORIBIO','12-10-2002','Calle Lavadora',23564,'12345678G');
+INSERT INTO empleado VALUES('24076180X','CRISTIAN','SANDRO REY','30-11-2000','Avenida Mortadela',23560,'12345678G');
+INSERT INTO empleado VALUES('57648200B','LUIS','GARRIDO GARRIDO','25-12-1999','Calle Alfombra',23563,'12345678E');
+INSERT INTO empleado VALUES('32040454M','RENAN','HIGUERAS AGUILAR','31-12-1971','Calle Big Bang',23575,'12345678A');
+INSERT INTO empleado VALUES('22776836M','CARLOS','BELTRAN PERAL','16-05-2001','Calle Alonso',23561,'12345678A');
+INSERT INTO empleado VALUES('74967637B','ANA','SÁNCHEZ BALCHES','18-05-1996','Calle Maravillas',23561,'12345678B');
+INSERT INTO empleado VALUES('24978745D','DOMINGO','GÓMEZ SANZ','19-03-2000','Avenida Princesa',23571,'12345678G');
+INSERT INTO empleado VALUES('84449403G','GONZALO','VILLAR SERRANO','12-11-2001','Calle Delicias',23564,'12345678C');
+INSERT INTO empleado VALUES('19347163T','PABLO','VILLEGAS SLOT','14-09-2002','Calle Boteros',23565,'12345678E');
+INSERT INTO empleado VALUES('50273055T','JORDI','MONTORO GÓMEZ','27-03-1994','Calle Sansón',23575,'12345678E');
+INSERT INTO empleado VALUES('23627232E','RUBÉN','TORRENTE GÓMEZ','23-02-1982','Avenida El Coletas',23560,'12345678D');
+INSERT INTO empleado VALUES('39417246F','JUAN','MARAÑÓN PLAZA','21-01-2003','Calle Calabacín',23564,'12345678F');
+INSERT INTO empleado VALUES('96346422C','JORGE','REDONDO REDONDO','17-11-1989','Calle Lepanto',23575,'12345678C');
+INSERT INTO empleado VALUES('99294064M','JESÚS','BOLIVAR LANZAS','25-09-1999','Avenida El Cid',23570,'12345678D');
+INSERT INTO empleado VALUES('55248842J','DIEGO','ALTOZANO LANZAS','12-10-2001','Calle Sagitario',23572,'12345678G');
+INSERT INTO empleado VALUES('29935246X','SEBASTIÁN','CEBOLLA PÉREZ','27-11-2003','Avenida Rodaballo',23570,'12345678H');
+INSERT INTO empleado VALUES('20491469X','BLANCA','JAMES DONNOVAN','23-12-1992','Avenida La Jalea',23560,'12345678I');
+INSERT INTO empleado VALUES('13718492G','CONCHI','GARCÍA LÓPEZ','21-12-1986','Calle El Patrón',23568,'12345678J');
+INSERT INTO empleado VALUES('06669649V','LINA','KANE BELLINGHAM','21-05-2000','Calle Zaragoza',23566,'12345678C');
+INSERT INTO empleado VALUES('63052419N','MANUEL','ASTON MARTIN','17-05-1992','Calle Jabalquinto',23567,'12345678E');
+INSERT INTO empleado VALUES('50039893N','DOFFERSMIZ','VIDAL VARGAS','19-03-2002','Calle Enjendro',23569,'12345678D');
+INSERT INTO empleado VALUES('89713218Q','PATROCINIO','VILLA TORRES','12-11-2001','Avenida Batallón',23573,'12345678D');
+INSERT INTO empleado VALUES('48199217A','FRANCISCO','INIESTA NAVAS','29-09-2002','Calle Espinola',23578,'12345678B');
+INSERT INTO empleado VALUES('70832176L','JACINTO','CASILLAS VALDÉS','17-03-1995','Calle Calderón',23576,'12345678G');
+
+
+INSERT INTO empleado VALUES('84460336N','CHON','PINTO GARCÍA','23-02-1982','Avenida Villar',23562,'12345678B');
+INSERT INTO empleado VALUES('60263930C','JOSÉ','FORLÁN MESSI','21-01-2001','Calle Mónaco',23570,'12345678D');
+INSERT INTO empleado VALUES('97342272Q','RAMIRO','SUÁREZ RUIZ','11-11-1988','Calle Casino',23579,'12345678D');
+INSERT INTO empleado VALUES('94335991L','PABLO','OLAVIDE HEREDIA','17-09-1997','Avenida Villar',23577,'12345678B');
+INSERT INTO empleado VALUES('06858240P','PABLO	','CABALLERO GÓMEZ','11-11-2002','Calle Portafolios',23564,'12345678G');
+INSERT INTO empleado VALUES('27892101R','ADNREU','CARPIO MAÑAS','24-12-2000','Avenida Choped',23560,'12345678G');
+INSERT INTO empleado VALUES('14425371R','LUIS','TORRES GARCÍA','21-02-1999','Calle Mesa',23563,'12345678E');
+INSERT INTO empleado VALUES('59002503M','JOHN','MONTES LARA','30-09-1971','Calle Apocalipsis',23575,'12345678A');
+INSERT INTO empleado VALUES('73539783C','GIOVANNI','JURADO CUEVAS','16-04-2001','Calle Francia',23561,'12345678I');
+INSERT INTO empleado VALUES('63592882K','FRANCISCO','VILLARROEL PAZ','18-01-1996','Calle Holanda',23561,'12345678B');
+INSERT INTO empleado VALUES('55576166R','ÁNGEL','AGUDO SANZ','19-02-2000','Avenida España',23571,'12345678J');
+INSERT INTO empleado VALUES('29347344B','MÓNICA','VILLAR LANJARÓN','13-10-2001','Calle Honduras',23564,'12345678C');
+INSERT INTO empleado VALUES('77706073K','PAOLA','SLOT SLOT','11-05-2002','Calle Salvador',23565,'12345678C');
+INSERT INTO empleado VALUES('15259737L','JORDI','MBITIL PALAU','22-05-1994','Calle Vigo',23575,'12345678E');
+INSERT INTO empleado VALUES('90037275A','JORDAN','GIGGS CURRY','21-04-1982','Avenida El Coletas',23560,'12345678D');
+INSERT INTO empleado VALUES('25189717W','JUAN','PALACIOS SANTOS','22-05-2003','Calle Bosnia',23564,'12345678F');
+INSERT INTO empleado VALUES('44078117C','ERIC','EAGLE DYLAN','11-08-1989','Calle Langostino',23575,'12345678C');
+INSERT INTO empleado VALUES('97205152E','JOSUÉ','MUÑOZ CORTÉS','24-06-1999','Avenida El Cid',23570,'12345678D');
+INSERT INTO empleado VALUES('99931137R','AINHOA','PALAS SÁNCHEZ','11-10-2001','Calle Polonia',23572,'12345678J');
+INSERT INTO empleado VALUES('01644697J','ROBERTO','MÁRMOL PÉREZ','25-11-2003','Avenida Suecia',23570,'12345678I');
+INSERT INTO empleado VALUES('86163999L','SALVADOR','VARGAS DOLORES','26-12-1992','Avenida La Jalea',23560,'12345678I');
+INSERT INTO empleado VALUES('79427098W','DAVID','VILLENA LÓPEZ','27-12-1986','Calle Enana',23568,'12345678J');
+INSERT INTO empleado VALUES('88167421A','DIEGO','TALAVERA BAENA','24-05-2000','Calle Holanda',23566,'12345678B');
+INSERT INTO empleado VALUES('91237430H','HÉCTOR','CALZADO FERRO','13-05-1992','Calle Prim',23567,'12345678F');
+INSERT INTO empleado VALUES('80902448V','RAMIRO','TORIBIO LUCENA','12-03-2002','Calle Kruskal',23569,'12345678G');
+INSERT INTO empleado VALUES('67920997L','PORTGAS','D ACE','11-11-2001','Avenida Batallón',23573,'12345678I');
+INSERT INTO empleado VALUES('67944311B','MONKEY','D LUFFY','24-09-2002','Calle Lagarto',23578,'12345678F');
+INSERT INTO empleado VALUES('76308242S','JOTARO','KUJOH JOESTAR','15-03-1995','Calle Villegas',23576,'12345678B');
+INSERT INTO empleado VALUES('91504031A','MIGUEL','ZABALETA GARCÍA','23-02-1982','Avenida Motril',23562,'12345678G');
+INSERT INTO empleado VALUES('36365968R','JOSÉ','RIVERO CASADO','11-01-2001','Calle Andorra',23570,'12345678D');
+INSERT INTO empleado VALUES('34766319W','NABIL','SUÁREZ FEKIR','01-11-1988','Calle Gibraltar',23579,'12345678D');
+INSERT INTO empleado VALUES('07995290F','PABLO','PODADERA PÉREZ','07-09-1997','Avenida Loquendo',23577,'12345678B');
+
+
+
+/*POR SI LA LIAMOS EN ALGO PARA BORRAR LAS TABLAS*/
+/*
+DROP TABLE ACTUALIZACION CASCADE CONSTRAINTS;
+DROP TABLE AG_EM CASCADE CONSTRAINTS;
+DROP TABLE AGENCIA CASCADE CONSTRAINTS;
+DROP TABLE ANUNCIO CASCADE CONSTRAINTS;
+DROP TABLE BUG CASCADE CONSTRAINTS;
+DROP TABLE CP CASCADE CONSTRAINTS;
+DROP TABLE DIRECTOR CASCADE CONSTRAINTS;
+DROP TABLE DISEÑADOR CASCADE CONSTRAINTS;
+DROP TABLE EMP_EMP CASCADE CONSTRAINTS;
+DROP TABLE EMPLEADO CASCADE CONSTRAINTS;
+DROP TABLE EMPRESA CASCADE CONSTRAINTS;
+DROP TABLE JU_DIS CASCADE CONSTRAINTS;
+DROP TABLE JU_PROG CASCADE CONSTRAINTS;
+DROP TABLE JUEGO CASCADE CONSTRAINTS;
+DROP TABLE PERSONAJE CASCADE CONSTRAINTS;
+DROP TABLE PRODUCTO CASCADE CONSTRAINTS;
+DROP TABLE PROGRAMADOR CASCADE CONSTRAINTS;
+*/

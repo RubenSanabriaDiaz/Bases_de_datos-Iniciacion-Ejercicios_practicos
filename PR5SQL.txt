@@ -1,0 +1,63 @@
+/*PRACTICA 5 FUNDAMENTOS DE BASES DE DATOS*/
+
+/*Rubén Sanabria Díaz*/
+/*rsd00008@red.ujaen.es*/
+/*rsd00008*/
+/*26527380P*/
+
+/*1. Ejecuta el script PR1.SQL para que las tuplas de las tablas queden como
+se indica en el punto 5 de la Práctica 1 */
+
+/*2. Crea una vista actualizable, llamada alumnos_2000, que contenga aquellos 
+alumnos nacidos en el año 2000. La vista debe controlar la validez de 
+las inserciones y las actualizaciones. Comprueba el buen funcionamiento de 
+la vista consultando todas sus tuplas. */
+CREATE OR REPLACE VIEW alumnos_2000 (dni , nombre , apellidos , email , f_nacimiento) 
+AS SELECT dni, nombre, apellidos, email, f_nacimiento
+    FROM alumnos
+    WHERE f_nacimiento BETWEEN '1-ENE-2000' 
+                          AND '31-DIC-2000'
+WITH CHECK OPTION;
+
+
+
+/*3. Inserta EN LA VISTA alumnos_2000 las siguientes tuplas, comentando la 
+causa de los posibles errores que pudieran aparecer. */
+INSERT INTO alumnos_2000 VALUES ('11111111A' , 'CARLOS' , 'PLA VIVES' , 'carlospla555@hotmail.com' , '15/03/00');
+/* genera error de clave primaria debido a que ya existe un alumno con ese dni */
+
+INSERT INTO alumnos_2000 VALUES ('77777777G' , 'GEMA' , 'RAMIRO ALVES' , '' , '10/04/00');
+/* genera error puesto que hay una restriccion de NOT NULL en el correo */
+
+INSERT INTO alumnos_2000 VALUES ('88888888H' , 'LOLA' , '' , 'gemita587@gmail.com' , '10/04/00');
+/* genera error puesto que hay una restriccion de NOT NULL en los apellidos */
+
+INSERT INTO alumnos_2000 VALUES ('99999999I' , 'JESUS' , 'NAVIO YECLA' , '' , '10/04/01');
+/* genera error puesto que hay una restriccion de NOT NULL en el correo */
+
+INSERT INTO alumnos_2000 VALUES ('99999999I' , 'CARLOS' , 'PLA VIVES' , 'carlospla555@hotmail.com' , '15/03/00');
+
+SELECT * FROM alumnos; 
+SELECT * FROM alumnos_2000; 
+
+
+/*4. Crea una vista llamada sesiones_por_ordenador que muestre, para cada 
+alumno, el número de sesiones realizadas en cada ordenador*/
+CREATE OR REPLACE VIEW sesiones_por_ordenador (ip, marca, modelo, num_sesiones)
+AS  SELECT o.ip, o.marca, o.modelo, COUNT(s.ip)
+    FROM sesiones s, ordenadores o
+    WHERE o.ip = s.ip
+    GROUP BY o.ip, o.marca, o.modelo
+    ORDER BY COUNT(s.ip)
+WITH CHECK OPTION;
+
+SELECT * FROM sesiones_por_ordenador;
+
+
+/*5. Utilizando la vista anterior, resuelve con un select la consulta que 
+muestre el ordenador sobre el que se han realizado mayor número de sesiones*/
+SELECT ip, marca, modelo, num_sesiones
+FROM sesiones_por_ordenador
+GROUP BY ip,marca,modelo,num_sesiones
+HAVING num_sesiones = (SELECT MAX(seOr.num_sesiones)
+                       FROM sesiones_por_ordenador seOr);
