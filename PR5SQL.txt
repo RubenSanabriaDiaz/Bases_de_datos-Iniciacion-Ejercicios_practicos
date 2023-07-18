@@ -1,10 +1,5 @@
 /*PRACTICA 5 FUNDAMENTOS DE BASES DE DATOS*/
 
-/*Rubén Sanabria Díaz*/
-/*rsd00008@red.ujaen.es*/
-/*rsd00008*/
-/*26527380P*/
-
 /*1. Ejecuta el script PR1.SQL para que las tuplas de las tablas queden como
 se indica en el punto 5 de la Práctica 1 */
 
