@@ -1,11 +1,5 @@
 /*PRACTICA 4 FUNDAMENTOS DE BASES DE DATOS*/
 
-/*Rubén Sanabria Díaz*/
-/*rsd00008@red.ujaen.es*/
-/*rsd00008*/
-/*26527380P*/
-
-
 /* 1.- Insertar las mismas sesiones que las del día 17-FEB-2021 pero con la 
 fecha 14-ABR-2021 con una duración de 50 minutos y el mismo valor en cod pro*/
 
@@ -82,8 +76,7 @@ SELECT * FROM sesiones ORDER BY 1,2,5;
 
 
 
-
-
+/*DATOS DESDE LOS QUE PARTIMOS*/
 
 CREATE TABLE empresa(
               nif                  VARCHAR (9)           CONSTRAINT pk_empresa                      PRIMARY KEY,
@@ -566,7 +559,7 @@ INSERT INTO empleado VALUES('07995290F','PABLO','PODADERA PÉREZ','07-09-1997','
 
 
 
-/*POR SI LA LIAMOS EN ALGO PARA BORRAR LAS TABLAS*/
+/*PARA BORRAR LAS TABLAS*/
 /*
 DROP TABLE ACTUALIZACION CASCADE CONSTRAINTS;
 DROP TABLE AG_EM CASCADE CONSTRAINTS;
