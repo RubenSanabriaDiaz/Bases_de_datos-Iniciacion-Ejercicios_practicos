@@ -1,12 +1,5 @@
 /*PRACTICA 2 FUNDAMENTOS DE BASES DE DATOS*/
 
-/*Ruben Sanabria Diaz*/
-/*rsd00008@red.ujaen.es*/
-/*rsd00008*/
-/*26527380P*/
-
-
-
 /*1 Muestra las sesiones realizadas el 10 de octubre de 2021 */
 SELECT * FROM sesiones
 WHERE fecha = '10/10/2021';
