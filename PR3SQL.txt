@@ -1,5 +1,4 @@
 /*PRACTICA 3*/
-/*RUBEN SANABRIA DIAZ, rsd00008, 26527380P*/
 
 /*1 ¿Cuántas sesiones se han realizado en total?*/
 SELECT COUNT(*) "Nº TOTAL DE SESIONES" 
